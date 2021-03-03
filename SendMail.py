@@ -23,11 +23,11 @@ def send_mail(error_message, subject, recipients, file_paths=None):
     :param file_paths: 附件路径,如果有附件,需要以数组包裹字符串的形式传输["文件路径"]
     :return:
     """
-    host = "smtpscn.huawei.com"  # 地址
+    host = "******"  # 地址
     port = 25  # 端口
-    user = "jwx974376"  # 用户名
-    pwd = "Js747142549!@#"  # 密码
-    sender = "jinsong4@huawei.com"  # 发件人
+    user = "****"  # 用户名
+    pwd = "****"  # 密码
+    sender = "*****"  # 发件人
 
     message = MIMEMultipart()
     message["From"] = sender  # 发件人
