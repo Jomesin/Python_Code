@@ -1,0 +1,77 @@
+# -*- coding:utf-8 -*-
+# !/usr/bin/env python
+# Author: JISO
+# Email: 747142549@qq.com
+# File: 查询主机状态.py
+from selenium import webdriver
+import time
+import pandas as pd
+
+
+class ChromeQuery(object):
+
+    def __init__(self):
+        self.driver = webdriver.Chrome()
+        # 最大化
+        self.driver.maximize_window()
+
+        self.times = 0
+
+    def get_html(self, url):
+        self.driver.get(url)
+
+    def run(self, ip_vm):
+        parent_node = self.driver.find_element_by_id("global_vmlist_search")
+
+        # 获取该节点下的vm别名输入框
+        ip_input = parent_node.find_element_by_xpath("./div[2]/div[3]/div")
+        time.sleep(1)
+
+        # 激活输入框
+        ip_input.click()
+        # 发送数据给输入框
+        ip_input.find_element_by_xpath("./input").send_keys(ip_vm)
+        time.sleep(1)
+
+        # 点击搜索按钮
+        parent_node.find_element_by_xpath("./div[2]/div[4]/div[1]/button").click()
+        time.sleep(2)
+        # 获取数据表格界面
+        table_node = parent_node.find_element_by_xpath("./div[3]/div[2]/div[2]/div[1]/table/tbody[2]")
+        # 清空输入框
+        ip_input.find_element_by_xpath("./input").clear()
+        self.times = 1
+        if table_node.text:  # 下线了
+            return "否"
+        else:
+            return "是"
+
+    def close(self):
+        self.driver.quit()
+
+
+if __name__ == '__main__':
+    df = pd.read_excel(r"D:\DownloadPackage\低cpu利用率vm沟通清单-20210601 - 副本.xlsx")
+
+    driver = ChromeQuery()
+    driver.get_html("http://console.his.huawei.com/gocloud/rm/#/hisec2/VmList?servicealias=ec2&app_id=com.huawei.hdc.his")
+    time.sleep(5)
+
+    # 切换选项卡,切换为全局主机查询
+    driver.driver.find_element_by_xpath("//*[@id='tab-vmSearchList']").click()
+    time.sleep(1)
+
+    for tuple_data in df.itertuples():
+        ip_str = tuple_data[9]
+        ip_list = ip_str.split(",|，")
+        if len(ip_list) == 1:
+            status = driver.run(ip_list[0])
+        else:
+            status = "否"
+            for ip in ip_list:
+                status = driver.run(ip)
+        print(status)
+        df.loc[df["vm主机名"] == tuple_data["vm主机名"], "是否下线"] = status
+    else:
+        driver.close()
+        df.to_excel(r"D:\DownloadPackage\低cpu利用率vm沟通清单-test.xlsx")
